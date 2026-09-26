@@ -1,0 +1,22 @@
+{
+  "name": "docsy-backend",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "supabase functions serve",
+    "deploy": "supabase functions deploy"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "@supabase/functions-js": "^2.3.0",
+    "openai": "^4.20.0",
+    "@pinecone-database/pinecone": "^2.0.0",
+    "stripe": "^14.0.0",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "supabase": "^1.0.0"
+  }
+}
