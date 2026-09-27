@@ -21,6 +21,35 @@ export const signInWithGoogle = async () => {
   return data
 }
 
+export const signInWithEmail = async (email: string, password: string) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+
+  if (error) {
+    console.error('Sign in error:', error)
+    throw error
+  }
+  return data
+}
+
+export const signUpWithEmail = async (email: string, password: string) => {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: `${window.location.origin}/auth/callback`,
+    },
+  })
+
+  if (error) {
+    console.error('Sign up error:', error)
+    throw error
+  }
+  return data
+}
+
 export const signOut = async () => {
   const { error } = await supabase.auth.signOut()
   if (error) throw error
