@@ -1,0 +1,21 @@
+{
+  "buildCommand": "npm run build --workspace=frontend",
+  "outputDirectory": "frontend/.next",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "@supabase-url",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase-anon-key",
+    "R2_ACCOUNT_ID": "@r2-account-id",
+    "R2_ACCESS_KEY_ID": "@r2-access-key-id",
+    "R2_SECRET_ACCESS_KEY": "@r2-secret-access-key",
+    "R2_BUCKET_NAME": "@r2-bucket-name",
+    "OPENAI_API_KEY": "@openai-api-key",
+    "PINECONE_API_KEY": "@pinecone-api-key",
+    "PINECONE_INDEX_NAME": "@pinecone-index-name",
+    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "@stripe-publishable-key",
+    "STRIPE_SECRET_KEY": "@stripe-secret-key",
+    "STRIPE_WEBHOOK_SECRET": "@stripe-webhook-secret",
+    "NEXT_PUBLIC_STRIPE_PRO_PRICE_ID": "@stripe-pro-price-id"
+  }
+}

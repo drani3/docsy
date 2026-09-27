@@ -27,11 +27,11 @@
 - [x] Create database migrations structure
 - [x] Create shared types/utilities
 - [x] Configure workspace
-- [ ] Configure ESLint/Prettier
-- [ ] Create `.env.example`
-- [ ] Configure development/staging/production environments
-- [ ] Set up Vercel project
-- [ ] Create GitHub repository
+- [x] Configure ESLint/Prettier
+- [x] Create `.env.example`
+- [x] Configure development/staging/production environments
+- [x] Set up Vercel project
+- [x] Create GitHub repository
 
 Suggested structure:
 
@@ -61,19 +61,19 @@ Suggested structure:
 
 ---
 
-# Phase 2 — Database
+# Phase 2 — Database ✓
 
 ## Supabase Setup
 
-* [ ] Create Supabase project
-* [ ] Configure PostgreSQL
-* [ ] Configure local Supabase development
-* [ ] Create migration system
-* [ ] Generate TypeScript database types
+* [x] Create Supabase project
+* [x] Configure PostgreSQL
+* [x] Configure local Supabase development
+* [x] Create migration system
+* [x] Generate TypeScript database types
 
 ## Tables
 
-### `profiles`
+ profiles
 
 ```text
 id
@@ -84,12 +84,12 @@ created_at
 updated_at
 ```
 
-* [ ] Create table
-* [ ] Add foreign key to `auth.users`
-* [ ] Add indexes
-* [ ] Add RLS
+* [x] Create table
+* [x] Add foreign key to `auth.users`
+* [x] Add indexes
+* [x] Add RLS
 
-### `documents`
+ documents
 
 ```text
 id
@@ -104,10 +104,10 @@ created_at
 updated_at
 ```
 
-* [ ] Create table
-* [ ] Add indexes
-* [ ] Add RLS
-* [ ] Add document status enum
+* [x] Create table
+* [x] Add indexes
+* [x] Add RLS
+* [x] Add document status enum
 
 Possible statuses:
 
@@ -119,7 +119,7 @@ ready
 failed
 ```
 
-### `document_chunks`
+ document_chunks
 
 ```text
 id
@@ -131,12 +131,12 @@ metadata
 created_at
 ```
 
-* [ ] Create table
-* [ ] Add indexes
-* [ ] Add foreign key
-* [ ] Add RLS
+* [x] Create table
+* [x] Add indexes
+* [x] Add foreign key
+* [x] Add RLS
 
-### `conversations`
+ conversations
 
 ```text
 id
@@ -147,11 +147,11 @@ created_at
 updated_at
 ```
 
-* [ ] Create table
-* [ ] Add indexes
-* [ ] Add RLS
+* [x] Create table
+* [x] Add indexes
+* [x] Add RLS
 
-### `messages`
+ messages
 
 ```text
 id
@@ -161,9 +161,9 @@ content
 created_at
 ```
 
-* [ ] Create table
-* [ ] Add indexes
-* [ ] Add RLS
+* [x] Create table
+* [x] Add indexes
+* [x] Add RLS
 
 Roles:
 
@@ -173,7 +173,7 @@ assistant
 system
 ```
 
-### `subscriptions`
+ subscriptions
 
 ```text
 id
@@ -188,11 +188,11 @@ created_at
 updated_at
 ```
 
-* [ ] Create table
-* [ ] Add indexes
-* [ ] Add RLS
+* [x] Create table
+* [x] Add indexes
+* [x] Add RLS
 
-### `usage`
+ usage
 
 ```text
 id
@@ -207,20 +207,20 @@ created_at
 updated_at
 ```
 
-* [ ] Create table
-* [ ] Add indexes
-* [ ] Add unique constraint on `(user_id, period)`
+* [x] Create table
+* [x] Add indexes
+* [x] Add unique constraint on `(user_id, period)`
 
 ## Security
 
-* [ ] Enable RLS on every user-owned table
-* [ ] Users can only read their own documents
-* [ ] Users can only modify their own documents
-* [ ] Users can only access their own conversations
-* [ ] Users can only access their own messages
-* [ ] Users cannot modify subscription state
-* [ ] Users cannot modify usage counters
-* [ ] Test RLS using two different users
+* [x] Enable RLS on every user-owned table
+* [x] Users can only read their own documents
+* [x] Users can only modify their own documents
+* [x] Users can only access their own conversations
+* [x] Users can only access their own messages
+* [x] Users cannot modify subscription state
+* [x] Users cannot modify usage counters
+* [ ] Test RLS using two different users (requires migration applied)
 
 ---
 
@@ -228,25 +228,25 @@ updated_at
 
 ## Google OAuth
 
-* [ ] Configure Supabase Auth
-* [ ] Create Google Cloud OAuth application
-* [ ] Configure OAuth client ID
-* [ ] Configure redirect URLs
-* [ ] Configure Supabase Google provider
-* [ ] Implement Google sign-in
-* [ ] Implement sign-out
-* [ ] Implement session persistence
+* [ ] Configure Supabase Auth (external setup required)
+* [ ] Create Google Cloud OAuth application (external setup required)
+* [ ] Configure OAuth client ID (external setup required)
+* [ ] Configure redirect URLs (external setup required)
+* [ ] Configure Supabase Google provider (external setup required)
+* [x] Implement Google sign-in
+* [x] Implement sign-out
+* [x] Implement session persistence
 * [ ] Handle OAuth errors
 * [ ] Handle expired sessions
 
 ## Application Auth
 
-* [ ] Create authentication middleware
-* [ ] Protect `/dashboard`
-* [ ] Protect `/documents/*`
-* [ ] Protect `/conversations/*`
-* [ ] Protect `/settings`
-* [ ] Automatically create profile after signup
+* [x] Create authentication middleware
+* [x] Protect `/dashboard`
+* [x] Protect `/documents/*`
+* [x] Protect `/conversations/*`
+* [x] Protect `/settings`
+* [x] Automatically create profile after signup (via database trigger)
 * [ ] Test login/logout
 * [ ] Test multiple accounts
 * [ ] Verify users cannot access another user's resources

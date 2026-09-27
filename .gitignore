@@ -49,3 +49,5 @@ yarn-error.log*
 
 ### Supabase ###
 .supabase/
+/frontend/next-env.d.ts
+/frontend/tsconfig.tsbuildinfo
