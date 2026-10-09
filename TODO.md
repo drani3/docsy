@@ -253,7 +253,7 @@ updated_at
 
 ---
 
-# Phase 4 — UI Foundation
+# Phase 4 — UI Foundation ✓
 
 ## Routes
 
@@ -279,15 +279,15 @@ updated_at
 
 ## UI
 
-* [ ] Create application layout
-* [ ] Create navbar
-* [ ] Create sidebar
-* [ ] Create user menu
-* [ ] Create loading states
-* [ ] Create error states
-* [ ] Create empty states
-* [ ] Create toast/notification system
-* [ ] Create responsive layout
+* [x] Create application layout
+* [x] Create navbar
+* [x] Create sidebar
+* [x] Create user menu
+* [x] Create loading states
+* [x] Create error states
+* [x] Create empty states
+* [x] Create toast/notification system
+* [x] Create responsive layout
 * [ ] Add dark/light theme if desired
 
 ---
@@ -296,10 +296,10 @@ updated_at
 
 ## Setup
 
-* [ ] Create Cloudflare account
-* [ ] Create R2 bucket
-* [ ] Configure R2 credentials
-* [ ] Add environment variables
+* [x] Create Cloudflare account
+* [x] Create R2 bucket
+* [x] Configure R2 credentials
+* [x] Add environment variables
 
 Required environment variables:
 
@@ -312,11 +312,11 @@ R2_BUCKET_NAME=
 
 ## Storage
 
-* [ ] Implement server-side upload URL generation
-* [ ] Implement PDF upload
-* [ ] Restrict uploads to PDF
-* [ ] Add file-size limit
-* [ ] Generate unique storage keys
+* [x] Implement server-side upload URL generation
+* [x] Implement PDF upload
+* [x] Restrict uploads to PDF
+* [x] Add file-size limit
+* [x] Generate unique storage keys
 
 Storage format:
 
@@ -324,13 +324,13 @@ Storage format:
 {user_id}/{document_id}/original.pdf
 ```
 
-* [ ] Store R2 key in `documents`
-* [ ] Implement signed download URLs
-* [ ] Implement document deletion
-* [ ] Delete R2 object when document is deleted
-* [ ] Prevent users from accessing other users' objects
-* [ ] Test upload
-* [ ] Test download
+* [x] Store R2 key in `documents`
+* [x] Implement signed download URLs
+* [x] Implement document deletion
+* [x] Delete R2 object when document is deleted
+* [x] Prevent users from accessing other users' objects
+* [x] Test upload
+* [x] Test download
 * [ ] Test deletion
 
 ---

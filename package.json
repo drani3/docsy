@@ -15,15 +15,10 @@
     "lint": "npm run lint --workspaces"
   },
   "devDependencies": {
-    "@types/node": "^26.6.3",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
-    "concurrently": "^8.2.2",
-    "typescript": "^6.0.3"
+    "concurrently": "^8.2.2"
   },
-  "dependencies": {
-    "next": "^16.3.6",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+  "overrides": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   }
 }
