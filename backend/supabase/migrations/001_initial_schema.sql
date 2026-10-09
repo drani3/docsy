@@ -1,8 +1,8 @@
 -- =============================================================================
 -- Docsy — initial schema
 --
--- Covers TODO Phases 2–5: profiles, documents, document_chunks, conversations,
--- messages, subscriptions, usage, RLS, and the signup trigger.
+-- Covers TODO Phases 2–7 (chunk storage): profiles, documents, document_chunks,
+-- conversations, messages, subscriptions, usage, RLS, and the signup trigger.
 --
 -- Access model:
 --   * Browser / API routes use the user's session (role `authenticated`); RLS
@@ -84,6 +84,8 @@ create table public.documents (
   mime_type   text not null default 'application/pdf' check (mime_type = 'application/pdf'),
   status      public.document_status not null default 'uploading',
   page_count  int check (page_count >= 0),
+  -- Why ingestion failed (e.g. scanned PDF), shown to the user. Server-written only.
+  error_message text check (char_length(error_message) <= 500),
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now(),
 

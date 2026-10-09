@@ -46,6 +46,7 @@ export interface Database {
           mime_type: string
           status: 'uploading' | 'processing' | 'embedding' | 'ready' | 'failed'
           page_count: number | null
+          error_message: string | null
           created_at: string
           updated_at: string
         }
@@ -58,6 +59,7 @@ export interface Database {
           mime_type?: string
           status?: 'uploading' | 'processing' | 'embedding' | 'ready' | 'failed'
           page_count?: number | null
+          error_message?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -70,6 +72,7 @@ export interface Database {
           mime_type?: string
           status?: 'uploading' | 'processing' | 'embedding' | 'ready' | 'failed'
           page_count?: number | null
+          error_message?: string | null
           created_at?: string
           updated_at?: string
         }

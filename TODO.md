@@ -335,17 +335,17 @@ Storage format:
 
 ---
 
-# Phase 6 — PDF Upload
+# Phase 6 — PDF Upload ✓
 
 ## Frontend
 
-* [ ] Create drag-and-drop uploader
-* [ ] Add file picker
-* [ ] Display filename
-* [ ] Display file size
-* [ ] Validate PDF
-* [ ] Validate file size
-* [ ] Show upload progress
+* [x] Create drag-and-drop uploader
+* [x] Add file picker
+* [x] Display filename
+* [x] Display file size
+* [x] Validate PDF
+* [x] Validate file size
+* [x] Show upload progress
 
 ## Upload Flow
 
@@ -363,10 +363,10 @@ Upload to R2
 Start processing
 ```
 
-* [ ] Create document DB record
-* [ ] Upload PDF to R2
-* [ ] Trigger ingestion
-* [ ] Display processing status
+* [x] Create document DB record
+* [x] Upload PDF to R2
+* [x] Trigger ingestion
+* [x] Display processing status
 
 Status UI:
 
@@ -380,9 +380,9 @@ Embedding
 Ready
 ```
 
-* [ ] Handle failed processing
-* [ ] Allow retry
-* [ ] Display status in dashboard
+* [x] Handle failed processing
+* [x] Allow retry
+* [x] Display status in dashboard
 
 ---
 
@@ -414,21 +414,21 @@ Document = Ready
 
 ## PDF Processing
 
-* [ ] Choose PDF parser
-* [ ] Implement PDF text extraction
-* [ ] Preserve page numbers
-* [ ] Handle multi-page PDFs
-* [ ] Detect empty PDFs
-* [ ] Detect scanned PDFs
-* [ ] Decide OCR strategy
+* [x] Choose PDF parser (unpdf — serverless build of PDF.js)
+* [x] Implement PDF text extraction
+* [x] Preserve page numbers
+* [x] Handle multi-page PDFs
+* [x] Detect empty PDFs
+* [x] Detect scanned PDFs
+* [x] Decide OCR strategy (MVP: no OCR — scanned PDFs fail with a clear message; revisit in Phase 19)
 
 ## Chunking
 
-* [ ] Implement chunking
-* [ ] Define chunk size
-* [ ] Define chunk overlap
-* [ ] Preserve page metadata
-* [ ] Store chunks in Postgres
+* [x] Implement chunking
+* [x] Define chunk size (1600 chars ≈ 400 tokens, chunks never span pages)
+* [x] Define chunk overlap (200 chars ≈ 50 tokens)
+* [x] Preserve page metadata
+* [x] Store chunks in Postgres
 
 Each chunk should contain:
 
@@ -444,12 +444,12 @@ Each chunk should contain:
 
 ## Embeddings
 
-* [ ] Generate OpenAI embeddings
-* [ ] Batch embedding requests
-* [ ] Handle API errors
-* [ ] Handle rate limits
-* [ ] Handle partial failures
-* [ ] Make ingestion idempotent
+* [x] Generate OpenAI embeddings (text-embedding-3-small, 1536 dims)
+* [x] Batch embedding requests (100 per request)
+* [x] Handle API errors
+* [x] Handle rate limits (backoff + Retry-After on 429/5xx)
+* [x] Handle partial failures (document marked failed; Retry re-runs safely)
+* [x] Make ingestion idempotent (chunk upsert + deterministic vector ids + stale cleanup)
 
 ## Status Handling
 
@@ -471,8 +471,8 @@ processing
 failed
 ```
 
-* [ ] Log ingestion errors
-* [ ] Allow retry
+* [x] Log ingestion errors
+* [x] Allow retry
 
 ---
 
@@ -482,8 +482,8 @@ failed
 
 * [ ] Create Pinecone account
 * [ ] Create serverless index
-* [ ] Select correct embedding model/dimension
-* [ ] Configure namespace strategy
+* [x] Select correct embedding model/dimension (1536, cosine)
+* [x] Configure namespace strategy (one namespace per user + document_id filter)
 * [ ] Configure API credentials
 
 ## Vector Metadata
@@ -501,13 +501,13 @@ Each vector should contain metadata similar to:
 
 ## Operations
 
-* [ ] Implement vector upsert
-* [ ] Implement similarity search
-* [ ] Implement metadata filtering
-* [ ] Implement document deletion
-* [ ] Implement namespace/document isolation
+* [x] Implement vector upsert
+* [x] Implement similarity search
+* [x] Implement metadata filtering
+* [x] Implement document deletion
+* [x] Implement namespace/document isolation
 * [ ] Test retrieval quality
-* [ ] Ensure user A cannot retrieve user B's vectors
+* [x] Ensure user A cannot retrieve user B's vectors (verified against a mock; re-check with real index)
 
 ---
 
@@ -557,24 +557,24 @@ Answer
 
 Implement:
 
-* [ ] Question validation
-* [ ] Authentication
-* [ ] Document ownership check
+* [x] Question validation
+* [x] Authentication
+* [x] Document ownership check
 * [ ] Subscription check
 * [ ] Usage check
-* [ ] Query embedding
-* [ ] Pinecone retrieval
-* [ ] Top-K retrieval
-* [ ] Similarity threshold
-* [ ] Context construction
-* [ ] OpenAI request
-* [ ] Answer generation
-* [ ] Error handling
-* [ ] Timeout handling
+* [x] Query embedding
+* [x] Pinecone retrieval
+* [x] Top-K retrieval (K=8)
+* [x] Similarity threshold (0.25, tune in Phase 18)
+* [x] Context construction
+* [x] OpenAI request
+* [x] Answer generation
+* [x] Error handling
+* [x] Timeout handling
 
 ---
 
-# Phase 10 — Citations
+# Phase 10 — Citations ✓
 
 The model should return citations.
 
@@ -595,15 +595,15 @@ Example:
 
 Implement:
 
-* [ ] Store page number in every chunk
-* [ ] Include page metadata during retrieval
-* [ ] Return citations from backend
-* [ ] Display citations in UI
-* [ ] Make citations clickable
-* [ ] Display page number
-* [ ] Optionally display source excerpt
-* [ ] Prevent fabricated citations
-* [ ] Instruct model to say it cannot find the answer when evidence is insufficient
+* [x] Store page number in every chunk
+* [x] Include page metadata during retrieval
+* [x] Return citations from backend
+* [x] Display citations in UI
+* [x] Make citations clickable (opens the PDF at that page)
+* [x] Display page number
+* [x] Optionally display source excerpt
+* [x] Prevent fabricated citations (unknown [n] markers are stripped)
+* [x] Instruct model to say it cannot find the answer when evidence is insufficient
 
 ---
 

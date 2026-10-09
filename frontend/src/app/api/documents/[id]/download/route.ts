@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { generateDownloadUrl } from '@/lib/r2/upload'
 import { NextResponse } from 'next/server'
 
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+// GET /api/documents/[id]/download[?inline=1]: inline opens in the browser's PDF viewer
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -27,7 +28,8 @@ export async function GET(_request: Request, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Document is still uploading' }, { status: 409 })
     }
 
-    const url = await generateDownloadUrl(document.storage_key, document.filename)
+    const inline = new URL(request.url).searchParams.get('inline') === '1'
+    const url = await generateDownloadUrl(document.storage_key, document.filename, inline)
 
     return NextResponse.json({ url })
   } catch (error) {

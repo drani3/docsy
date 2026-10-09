@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { deleteFile } from '@/lib/r2/upload'
+import { deleteDocumentVectors, isPineconeConfigured, namespaceForUser } from '@/lib/vector/pinecone'
 import { NextResponse } from 'next/server'
 
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
@@ -22,8 +23,14 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
       return NextResponse.json({ error: 'Document not found' }, { status: 404 })
     }
 
-    // Delete the object first: if R2 fails the record stays, so the user can retry
-    // instead of leaving an orphaned file nobody can see. R2 deletes are idempotent.
+    // Delete external copies first (vectors, then the file): if either fails the
+    // record stays, so the user can retry instead of leaving orphans nobody can
+    // see. Both deletes are idempotent. Chunks go with the row (on delete cascade).
+    if (isPineconeConfigured()) {
+      await deleteDocumentVectors(namespaceForUser(user.id), document.id)
+    } else {
+      console.warn('Pinecone is not configured; skipping vector deletion for', document.id)
+    }
     await deleteFile(document.storage_key)
 
     const { error } = await supabase.from('documents').delete().eq('id', document.id)
@@ -32,8 +39,6 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
       console.error('Error deleting document:', error)
       return NextResponse.json({ error: 'Failed to delete document' }, { status: 500 })
     }
-
-    // TODO (Phase 8): delete this document's vectors from Pinecone.
 
     return NextResponse.json({ success: true })
   } catch (error) {

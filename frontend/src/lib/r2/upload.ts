@@ -22,11 +22,13 @@ export async function generateUploadUrl(key: string, contentType: string) {
   return getSignedUrl(r2Client, command, { expiresIn: UPLOAD_URL_EXPIRY })
 }
 
-export async function generateDownloadUrl(key: string, fileName: string) {
+// inline: open in the browser's PDF viewer (used by citations to jump to a page)
+export async function generateDownloadUrl(key: string, fileName: string, inline = false) {
   const command = new GetObjectCommand({
     Bucket: BUCKET_NAME,
     Key: key,
-    ResponseContentDisposition: `attachment; filename="${fileName.replace(/["\\\r\n]/g, '_')}"`,
+    ResponseContentDisposition: `${inline ? 'inline' : 'attachment'}; filename="${fileName.replace(/["\\\r\n]/g, '_')}"`,
+    ResponseContentType: 'application/pdf',
   })
 
   return getSignedUrl(r2Client, command, { expiresIn: DOWNLOAD_URL_EXPIRY })
@@ -43,6 +45,14 @@ export async function getObjectSize(key: string): Promise<number | null> {
     }
     throw error
   }
+}
+
+export async function downloadFile(key: string): Promise<Uint8Array> {
+  const result = await r2Client.send(new GetObjectCommand({ Bucket: BUCKET_NAME, Key: key }))
+  if (!result.Body) {
+    throw new Error(`Empty body for object ${key}`)
+  }
+  return result.Body.transformToByteArray()
 }
 
 export async function deleteFile(key: string) {
