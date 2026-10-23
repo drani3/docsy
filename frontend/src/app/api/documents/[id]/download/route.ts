@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { generateDownloadUrl } from '@/lib/r2/upload'
+import { log } from '@/lib/log'
 import { NextResponse } from 'next/server'
 
 // GET /api/documents/[id]/download[?inline=1]: inline opens in the browser's PDF viewer
@@ -33,7 +34,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     return NextResponse.json({ url })
   } catch (error) {
-    console.error('Error generating download URL:', error)
+    log.error('document.download_url_failed', { document_id: params.id, error })
     return NextResponse.json({ error: 'Failed to generate download link' }, { status: 500 })
   }
 }

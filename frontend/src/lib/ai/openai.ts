@@ -1,11 +1,13 @@
 import 'server-only'
-import { fetchJson, requireEnv } from './http'
+import { fetchJson, fetchStream, requireEnv } from './http'
 
 const OPENAI_URL = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1'
 
-// Must match the Pinecone index dimension
+// Must match the Pinecone index dimension. text-embedding-3-small natively
+// returns 1536 values; OpenAI shortens them to 1024 on request with little
+// loss in retrieval quality.
 export const EMBEDDING_MODEL = 'text-embedding-3-small'
-export const EMBEDDING_DIMENSIONS = 1536
+export const EMBEDDING_DIMENSIONS = 1024
 
 export const CHAT_MODEL = process.env.OPENAI_CHAT_MODEL || 'gpt-4.1-mini'
 
@@ -97,4 +99,89 @@ export async function chatJson<T>(params: {
   }
 
   return { data: JSON.parse(choice.message.content) as T, tokens: response.usage.total_tokens }
+}
+
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant'
+  content: string
+}
+
+interface ChatChunk {
+  choices: { delta: { content?: string | null; refusal?: string | null }; finish_reason: string | null }[]
+  usage?: { total_tokens: number } | null
+}
+
+// Streaming chat completion. Yields text as it arrives; `onDone` receives
+// the token count and finish reason. Aborting `signal` stops generation.
+export async function* chatStream(params: {
+  messages: ChatMessage[]
+  maxTokens: number
+  signal?: AbortSignal
+  onDone?: (info: { tokens: number; finishReason: string | null }) => void
+}): AsyncGenerator<string> {
+  const response = await fetchStream(
+    `${OPENAI_URL}/chat/completions`,
+    {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({
+        model: CHAT_MODEL,
+        messages: params.messages,
+        max_completion_tokens: params.maxTokens,
+        stream: true,
+        stream_options: { include_usage: true },
+      }),
+    },
+    { timeoutMs: 30_000, signal: params.signal }
+  )
+
+  const reader = response.body!.pipeThrough(new TextDecoderStream()).getReader()
+  let buffer = ''
+  let tokens = 0
+  let finishReason: string | null = null
+
+  try {
+    while (true) {
+      const { value, done } = await readWithIdleTimeout(reader, STREAM_IDLE_TIMEOUT_MS)
+      if (done) break
+      buffer += value
+
+      // Server-sent events: one `data: {...}` line per chunk
+      let newline: number
+      while ((newline = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, newline).trim()
+        buffer = buffer.slice(newline + 1)
+        if (!line.startsWith('data:')) continue
+        const data = line.slice(5).trim()
+        if (data === '[DONE]') continue
+
+        const chunk = JSON.parse(data) as ChatChunk
+        if (chunk.usage) tokens = chunk.usage.total_tokens
+        const choice = chunk.choices[0]
+        if (!choice) continue
+        if (choice.delta.refusal) throw new Error(`Model refused: ${choice.delta.refusal}`)
+        if (choice.finish_reason) finishReason = choice.finish_reason
+        if (choice.delta.content) yield choice.delta.content
+      }
+    }
+  } finally {
+    reader.cancel().catch(() => {})
+  }
+
+  params.onDone?.({ tokens, finishReason })
+}
+
+// Give up if the model goes quiet mid-answer
+const STREAM_IDLE_TIMEOUT_MS = 30_000
+
+async function readWithIdleTimeout<T>(reader: ReadableStreamDefaultReader<T>, ms: number) {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`Request timed out after ${ms}ms without data`)), ms)
+  })
+  try {
+    return await Promise.race([reader.read(), timeout])
+  } finally {
+    clearTimeout(timer)
+  }
 }

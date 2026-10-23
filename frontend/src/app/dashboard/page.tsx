@@ -2,6 +2,9 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import AppLayout from '@/components/layout/AppLayout'
+import UsageMeter from '@/components/billing/UsageMeter'
+import { getAccountSummary } from '@/lib/billing/entitlements'
+import { PLAN_NAMES } from '@/lib/billing/plans'
 
 const STATUS_STYLES: Record<string, string> = {
   uploading: 'bg-gray-100 text-gray-700',
@@ -19,11 +22,14 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
-  const { data: documents } = await supabase
-    .from('documents')
-    .select('id, filename, status, created_at')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+  const [{ data: documents }, account] = await Promise.all([
+    supabase
+      .from('documents')
+      .select('id, filename, status, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false }),
+    getAccountSummary(user.id),
+  ])
 
   const docs = documents ?? []
   const counts = {
@@ -52,6 +58,19 @@ export default async function DashboardPage() {
             <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
           </div>
         ))}
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-4 mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-medium text-gray-900">{PLAN_NAMES[account.plan]} plan</h3>
+          <Link href="/settings" className="text-sm text-indigo-600 hover:text-indigo-800">
+            {account.plan === 'free' ? 'Upgrade' : 'Manage'}
+          </Link>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2">
+          <UsageMeter label="Questions this month" used={account.usage.questions} limit={account.limits.questionsPerMonth} />
+          <UsageMeter label="Documents" used={account.usage.documents} limit={account.limits.documents} />
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow">

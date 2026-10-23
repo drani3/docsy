@@ -540,7 +540,7 @@ llm_tokens
 storage_bytes
 ```
 
-Usage is tracked per billing period.
+Usage is tracked per calendar month (UTC), the same for Free and Pro users, so the counter resets on the 1st regardless of when a subscription renews.
 
 Example:
 

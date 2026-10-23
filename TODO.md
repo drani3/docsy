@@ -236,8 +236,8 @@ updated_at
 * [x] Implement Google sign-in
 * [x] Implement sign-out
 * [x] Implement session persistence
-* [ ] Handle OAuth errors
-* [ ] Handle expired sessions
+* [x] Handle OAuth errors (/auth/callback sends provider and code-exchange errors back to /login with a message)
+* [x] Handle expired sessions (middleware validates with getUser() and refreshes tokens; API 401s redirect to /login?next=)
 
 ## Application Auth
 
@@ -444,7 +444,7 @@ Each chunk should contain:
 
 ## Embeddings
 
-* [x] Generate OpenAI embeddings (text-embedding-3-small, 1536 dims)
+* [x] Generate OpenAI embeddings (text-embedding-3-small, shortened to 1024 dims)
 * [x] Batch embedding requests (100 per request)
 * [x] Handle API errors
 * [x] Handle rate limits (backoff + Retry-After on 429/5xx)
@@ -480,11 +480,11 @@ failed
 
 ## Setup
 
-* [ ] Create Pinecone account
-* [ ] Create serverless index
-* [x] Select correct embedding model/dimension (1536, cosine)
+* [x] Create Pinecone account
+* [x] Create serverless index (1024 dims, cosine, AWS us-east-1)
+* [x] Select correct embedding model/dimension (1024, cosine; serverless index, AWS us-east-1)
 * [x] Configure namespace strategy (one namespace per user + document_id filter)
-* [ ] Configure API credentials
+* [x] Configure API credentials
 
 ## Vector Metadata
 
@@ -560,8 +560,8 @@ Implement:
 * [x] Question validation
 * [x] Authentication
 * [x] Document ownership check
-* [ ] Subscription check
-* [ ] Usage check
+* [x] Subscription check (checkEntitlement → resolvePlan)
+* [x] Usage check (consume_question, refunded if the answer fails)
 * [x] Query embedding
 * [x] Pinecone retrieval
 * [x] Top-K retrieval (K=8)
@@ -619,16 +619,16 @@ summary
 
 Implement:
 
-* [ ] Create conversation
-* [ ] Rename conversation
-* [ ] Delete conversation
-* [ ] Save user messages
-* [ ] Save assistant messages
-* [ ] Load conversation
-* [ ] Display message history
-* [ ] Conversation sidebar
-* [ ] Automatic conversation titles
-* [ ] Conversation timestamps
+* [x] Create conversation
+* [x] Rename conversation
+* [x] Delete conversation
+* [x] Save user messages
+* [x] Save assistant messages
+* [x] Load conversation
+* [x] Display message history
+* [x] Conversation sidebar
+* [x] Automatic conversation titles
+* [x] Conversation timestamps
 
 ## Context Management
 
@@ -646,36 +646,36 @@ Implement:
 
 Implement:
 
-* [ ] Store conversation summary
-* [ ] Summarize old messages
-* [ ] Keep recent messages
-* [ ] Include relevant prior conversation context
-* [ ] Define context-window limits
-* [ ] Prevent unlimited token usage
-* [ ] Test 100+ message conversation
+* [x] Store conversation summary
+* [x] Summarize old messages (once >12 unsummarized; folds up to 20 at a time, keeps the last 6)
+* [x] Keep recent messages
+* [x] Include relevant prior conversation context (summary + recent turns; previous question added to the retrieval query)
+* [x] Define context-window limits (≤12 recent messages × 1500 chars, summary ≤400 tokens, 8 sources)
+* [x] Prevent unlimited token usage
+* [ ] Test 100+ message conversation (needs Pinecone + OpenAI configured)
 * [ ] Test conversation continuation
 
 ---
 
-# Phase 12 — Chat UI
+# Phase 12 — Chat UI ✓
 
-* [ ] Create chat interface
-* [ ] Implement streaming responses
-* [ ] User message bubble
-* [ ] Assistant message bubble
-* [ ] Markdown rendering
-* [ ] Code block rendering
-* [ ] Loading indicator
-* [ ] Error handling
-* [ ] Retry button
-* [ ] Stop generation
-* [ ] Citation UI
-* [ ] Auto-scroll
-* [ ] Message timestamps
-* [ ] New conversation
-* [ ] Conversation switching
-* [ ] Rename conversation
-* [ ] Delete conversation
+* [x] Create chat interface
+* [x] Implement streaming responses
+* [x] User message bubble
+* [x] Assistant message bubble
+* [x] Markdown rendering
+* [x] Code block rendering (styled, no syntax highlighting)
+* [x] Loading indicator
+* [x] Error handling
+* [x] Retry button
+* [x] Stop generation
+* [x] Citation UI
+* [x] Auto-scroll
+* [x] Message timestamps
+* [x] New conversation
+* [x] Conversation switching
+* [x] Rename conversation
+* [x] Delete conversation
 
 ---
 
@@ -704,21 +704,21 @@ PRO
 
 ## Stripe Setup
 
-* [ ] Create Stripe account
-* [ ] Create products
-* [ ] Create prices
-* [ ] Configure monthly billing
-* [ ] Configure yearly billing if desired
-* [ ] Store Stripe price IDs in environment variables
-* [ ] Create Stripe customer
-* [ ] Implement Checkout Session
-* [ ] Implement success URL
-* [ ] Implement cancel URL
-* [ ] Implement Customer Portal
+* [ ] Create Stripe account (external)
+* [ ] Create products (external)
+* [ ] Create prices (external)
+* [x] Configure monthly billing (STRIPE_PRO_MONTHLY_PRICE_ID)
+* [x] Configure yearly billing if desired (optional STRIPE_PRO_YEARLY_PRICE_ID)
+* [x] Store Stripe price IDs in environment variables (server-side only; the browser just picks month/year)
+* [x] Create Stripe customer
+* [x] Implement Checkout Session
+* [x] Implement success URL
+* [x] Implement cancel URL
+* [x] Implement Customer Portal
 
 ---
 
-# Phase 14 — Stripe Webhooks
+# Phase 14 — Stripe Webhooks ✓ (code)
 
 Endpoint:
 
@@ -728,28 +728,28 @@ POST /api/stripe/webhook
 
 Implement:
 
-* [ ] Verify Stripe webhook signature
-* [ ] Never trust client-provided subscription status
-* [ ] Handle `checkout.session.completed`
-* [ ] Handle subscription creation
-* [ ] Handle subscription update
-* [ ] Handle subscription cancellation
-* [ ] Handle payment success
-* [ ] Handle payment failure
-* [ ] Update `subscriptions`
-* [ ] Update user plan
-* [ ] Handle webhook retries
-* [ ] Make webhook processing idempotent
-* [ ] Store processed Stripe event IDs
-* [ ] Test with Stripe CLI
-* [ ] Test successful payment
-* [ ] Test cancellation
-* [ ] Test failed payment
-* [ ] Test renewal
+* [x] Verify Stripe webhook signature
+* [x] Never trust client-provided subscription status
+* [x] Handle `checkout.session.completed`
+* [x] Handle subscription creation
+* [x] Handle subscription update
+* [x] Handle subscription cancellation
+* [x] Handle payment success
+* [x] Handle payment failure
+* [x] Update `subscriptions`
+* [x] Update user plan
+* [x] Handle webhook retries
+* [x] Make webhook processing idempotent
+* [x] Store processed Stripe event IDs
+* [ ] Test with Stripe CLI (see DEPLOYMENT.md §5)
+* [ ] Test successful payment (needs Stripe test keys)
+* [ ] Test cancellation (needs Stripe test keys)
+* [ ] Test failed payment (needs Stripe test keys)
+* [ ] Test renewal (needs Stripe test keys)
 
 ---
 
-# Phase 15 — Free/Pro Authorization
+# Phase 15 — Free/Pro Authorization ✓
 
 Create a central entitlement service:
 
@@ -790,20 +790,20 @@ Feature
 
 Implement:
 
-* [ ] Free limits
-* [ ] Pro limits
-* [ ] Monthly usage reset
-* [ ] Document limit
-* [ ] Question limit
-* [ ] File-size limit
-* [ ] Plan status checking
-* [ ] Grace period handling
-* [ ] Cancelled subscription handling
-* [ ] Payment failure handling
+* [x] Free limits
+* [x] Pro limits
+* [x] Monthly usage reset (calendar month, UTC)
+* [x] Document limit
+* [x] Question limit
+* [x] File-size limit
+* [x] Plan status checking
+* [x] Grace period handling
+* [x] Cancelled subscription handling
+* [x] Payment failure handling
 
 ---
 
-# Phase 16 — Usage Tracking
+# Phase 16 — Usage Tracking ✓
 
 Track:
 
@@ -817,14 +817,14 @@ Storage
 
 Implement:
 
-* [ ] Increment question count
-* [ ] Increment document count
-* [ ] Track embedding usage
-* [ ] Track LLM usage
-* [ ] Track monthly period
-* [ ] Prevent race conditions
-* [ ] Prevent users bypassing limits
-* [ ] Create usage dashboard
+* [x] Increment question count
+* [x] Increment document count
+* [x] Track embedding usage
+* [x] Track LLM usage
+* [x] Track monthly period
+* [x] Prevent race conditions (row lock in consume_question, advisory lock in create_document)
+* [x] Prevent users bypassing limits (users can no longer insert documents or change status directly)
+* [x] Create usage dashboard (settings + dashboard)
 
 Display:
 
@@ -844,10 +844,10 @@ Complete before public launch.
 
 ## Authentication
 
-* [ ] Supabase RLS everywhere
-* [ ] Validate every user ID server-side
-* [ ] Never trust user-provided `user_id`
-* [ ] Verify JWT
+* [x] Supabase RLS everywhere
+* [x] Validate every user ID server-side
+* [x] Never trust user-provided `user_id`
+* [x] Verify JWT
 
 ## API Keys
 
@@ -860,40 +860,40 @@ STRIPE_SECRET_KEY
 R2_SECRET_ACCESS_KEY
 ```
 
-* [ ] Keep all secrets server-side
-* [ ] Configure production secrets correctly
+* [x] Keep all secrets server-side
+* [ ] Configure production secrets correctly (see DEPLOYMENT.md §6)
 
 ## File Security
 
-* [ ] Validate uploaded files
-* [ ] Restrict MIME types
-* [ ] Limit file size
-* [ ] Prevent path traversal
-* [ ] Prevent malicious PDFs
+* [x] Validate uploaded files (%PDF- magic bytes, declared size checked against R2)
+* [x] Restrict MIME types
+* [x] Limit file size
+* [x] Prevent path traversal
+* [x] Prevent malicious PDFs (no font loading, 1000-page cap, unpdf with patched pdf.js)
 
 ## Data Isolation
 
-* [ ] Prevent cross-user document access
-* [ ] Prevent cross-user conversation access
-* [ ] Prevent cross-user Pinecone retrieval
-* [ ] Prevent cross-user R2 access
+* [x] Prevent cross-user document access
+* [x] Prevent cross-user conversation access
+* [x] Prevent cross-user Pinecone retrieval
+* [x] Prevent cross-user R2 access
 
 ## API Security
 
-* [ ] Rate-limit API endpoints
-* [ ] Add abuse protection
-* [ ] Verify Stripe webhook signatures
-* [ ] Add request validation
-* [ ] Add request logging
-* [ ] Do not log sensitive document contents
+* [x] Rate-limit API endpoints (Postgres fixed-window, per user)
+* [x] Add abuse protection
+* [x] Verify Stripe webhook signatures
+* [x] Add request validation
+* [x] Add request logging
+* [x] Do not log sensitive document contents
 
 ## AI Security
 
-* [ ] Protect against prompt injection
-* [ ] Treat document content as untrusted input
-* [ ] Prevent documents from overriding system instructions
-* [ ] Prevent fabricated citations
-* [ ] Restrict tool access if tools are later added
+* [x] Protect against prompt injection
+* [x] Treat document content as untrusted input
+* [x] Prevent documents from overriding system instructions
+* [x] Prevent fabricated citations
+* [x] Restrict tool access if tools are later added (no tools yet)
 
 ---
 
@@ -901,23 +901,23 @@ R2_SECRET_ACCESS_KEY
 
 ## Initial Optimization
 
-* [ ] Evaluate chunk size
-* [ ] Evaluate chunk overlap
-* [ ] Test top-K values
-* [ ] Add similarity threshold
-* [ ] Test metadata filtering
-* [ ] Test multi-page answers
-* [ ] Test questions requiring multiple chunks
-* [ ] Test questions with no answer
-* [ ] Test ambiguous questions
-* [ ] Test follow-up questions
-* [ ] Test tables
-* [ ] Test headings
-* [ ] Test long documents
-* [ ] Test multiple documents
-* [ ] Test hallucination resistance
-* [ ] Add "not found" behavior
-* [ ] Add source citations
+* [ ] Evaluate chunk size (run npm run eval:retrieval once OpenAI is configured)
+* [ ] Evaluate chunk overlap (run npm run eval:retrieval once OpenAI is configured)
+* [ ] Test top-K values (run npm run eval:retrieval once OpenAI is configured)
+* [x] Add similarity threshold (MIN_SIMILARITY 0.25)
+* [ ] Test metadata filtering (run npm run eval:retrieval once OpenAI is configured)
+* [ ] Test multi-page answers (run npm run eval:retrieval once OpenAI is configured)
+* [ ] Test questions requiring multiple chunks (run npm run eval:retrieval once OpenAI is configured)
+* [ ] Test questions with no answer (run npm run eval:retrieval once OpenAI is configured)
+* [ ] Test ambiguous questions (run npm run eval:retrieval once OpenAI is configured)
+* [ ] Test follow-up questions (run npm run eval:retrieval once OpenAI is configured)
+* [ ] Test tables (run npm run eval:retrieval once OpenAI is configured)
+* [ ] Test headings (run npm run eval:retrieval once OpenAI is configured)
+* [ ] Test long documents (run npm run eval:retrieval once OpenAI is configured)
+* [ ] Test multiple documents (run npm run eval:retrieval once OpenAI is configured)
+* [ ] Test hallucination resistance (run npm run eval:retrieval once OpenAI is configured)
+* [x] Add "not found" behavior
+* [x] Add source citations
 
 ## Later Improvements
 
@@ -936,19 +936,19 @@ Do NOT implement initially.
 
 Test:
 
-* [ ] Normal text PDF
+* [x] Normal text PDF
 * [ ] Large PDF
-* [ ] 1-page PDF
-* [ ] 500-page PDF
+* [x] 1-page PDF
+* [ ] 500-page PDF (page cap tested at 1001 pages; real 500-page timing needs OpenAI)
 * [ ] PDF with tables
 * [ ] PDF with images
 * [ ] PDF with headers/footers
 * [ ] PDF with columns
-* [ ] Scanned PDF
-* [ ] Password-protected PDF
-* [ ] Corrupted PDF
-* [ ] Empty PDF
-* [ ] Non-English PDF
+* [x] Scanned PDF (rejected with a clear message)
+* [ ] Password-protected PDF (handled in code; no test fixture yet)
+* [x] Corrupted PDF
+* [x] Empty PDF (blank pages kept; all-blank = scanned)
+* [x] Non-English PDF (Latin-1 accents)
 
 ## Scanned PDFs
 
@@ -969,21 +969,21 @@ If yes:
 
 ---
 
-# Phase 20 — Observability
+# Phase 20 — Observability ✓
 
 Add:
 
-* [ ] Structured logging
-* [ ] Request IDs
-* [ ] User IDs in internal logs
-* [ ] Document ingestion logs
-* [ ] RAG latency tracking
-* [ ] OpenAI latency tracking
-* [ ] Pinecone latency tracking
-* [ ] Error tracking
-* [ ] Failed ingestion monitoring
-* [ ] Stripe webhook monitoring
-* [ ] API usage monitoring
+* [x] Structured logging
+* [x] Request IDs
+* [x] User IDs in internal logs
+* [x] Document ingestion logs
+* [x] RAG latency tracking
+* [x] OpenAI latency tracking
+* [x] Pinecone latency tracking
+* [x] Error tracking (structured error logs; plug in Sentry or a log drain for alerts)
+* [x] Failed ingestion monitoring (/api/health with token)
+* [x] Stripe webhook monitoring
+* [x] API usage monitoring (usage table + rate_limit.exceeded logs)
 
 Track document pipeline:
 
@@ -1015,25 +1015,25 @@ response
 
 ## Unit Tests
 
-* [ ] Chunking
-* [ ] PDF metadata extraction
-* [ ] Usage limits
-* [ ] Subscription checks
-* [ ] Entitlements
-* [ ] Prompt construction
-* [ ] Citation parsing
+* [x] Chunking
+* [x] PDF metadata extraction
+* [x] Usage limits (limit math; atomicity lives in SQL)
+* [x] Subscription checks
+* [x] Entitlements
+* [x] Prompt construction
+* [x] Citation parsing
 
 ## Integration Tests
 
-* [ ] Google authentication
-* [ ] PDF upload
-* [ ] R2 storage
-* [ ] PDF ingestion
-* [ ] Pinecone retrieval
-* [ ] RAG question
-* [ ] Conversation history
-* [ ] Stripe checkout
-* [ ] Stripe webhook
+* [ ] Google authentication (manual, DEPLOYMENT.md §8)
+* [ ] PDF upload (manual, DEPLOYMENT.md §8)
+* [ ] R2 storage (manual, DEPLOYMENT.md §8)
+* [ ] PDF ingestion (manual, DEPLOYMENT.md §8)
+* [ ] Pinecone retrieval (manual, DEPLOYMENT.md §8)
+* [ ] RAG question (manual, DEPLOYMENT.md §8)
+* [ ] Conversation history (manual, DEPLOYMENT.md §8)
+* [ ] Stripe checkout (manual, DEPLOYMENT.md §8)
+* [ ] Stripe webhook (manual, DEPLOYMENT.md §8)
 
 ## Security Tests
 
@@ -1041,7 +1041,7 @@ response
 * [ ] User A accessing User B conversation
 * [ ] User A querying User B Pinecone vectors
 * [ ] Free user bypassing limits
-* [ ] Forged Stripe webhook
+* [x] Forged Stripe webhook (route.test.ts)
 * [ ] Invalid JWT
 * [ ] Malicious PDF
 
@@ -1050,7 +1050,7 @@ response
 # Phase 22 — Production Deployment
 
 * [ ] Deploy Next.js to Vercel
-* [ ] Deploy Supabase Edge Functions
+* [ ] Deploy Supabase Edge Functions (not needed: all server code runs in Next.js API routes)
 * [ ] Configure production Supabase
 * [ ] Configure production R2
 * [ ] Configure production Pinecone
@@ -1058,7 +1058,7 @@ response
 * [ ] Configure production Google OAuth
 * [ ] Add production environment variables
 * [ ] Configure custom domain
-* [ ] Configure HTTPS
+* [x] Configure HTTPS (HSTS in production)
 * [ ] Configure Stripe production webhook
 * [ ] Configure OAuth production callback
 * [ ] Test complete production flow

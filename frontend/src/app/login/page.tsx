@@ -1,19 +1,49 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { signInWithEmail, signInWithGoogle } from '@/lib/auth'
+import { safeNextPath } from '@/lib/redirects'
 import { useRouter } from 'next/navigation'
+
+// Turn on once the Google provider is configured in Supabase (TODO Phase 3)
+const GOOGLE_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === 'true'
+
+// Reasons /auth/callback sends back
+const CALLBACK_ERRORS: Record<string, string> = {
+  cancelled: 'Google sign-in was cancelled.',
+  provider: 'Google sign-in failed. Please try again.',
+  expired: 'That sign-in link has expired or was already used. Please sign in again.',
+  missing_code: 'Sign-in did not complete. Please try again.',
+  session: 'Your session expired. Please sign in again.',
+}
 
 export default function LoginPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [isEmailLogin, setIsEmailLogin] = useState(false)
+  const [isEmailLogin, setIsEmailLogin] = useState(!GOOGLE_ENABLED)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [next, setNext] = useState('/dashboard')
+
+  // Read from the URL directly: useSearchParams would make this page dynamic
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    setNext(safeNextPath(params.get('next')))
+    const reason = params.get('error')
+    if (reason) setError(CALLBACK_ERRORS[reason] ?? 'Sign-in failed. Please try again.')
+  }, [])
 
   const handleGoogleSignIn = async () => {
-    setError('Google sign-in is currently disabled. Please use email/password to sign in.')
+    setLoading(true)
+    setError('')
+    try {
+      await signInWithGoogle(next)
+      // The browser is now on its way to Google
+    } catch (error: any) {
+      setError(error.message || 'Google sign-in failed')
+      setLoading(false)
+    }
   }
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
@@ -23,7 +53,8 @@ export default function LoginPage() {
 
     try {
       await signInWithEmail(email, password)
-      router.push('/dashboard')
+      router.push(next)
+      router.refresh()
     } catch (error: any) {
       console.error('Error signing in:', error)
       setError(error.message || 'Failed to sign in')
@@ -83,12 +114,14 @@ export default function LoginPage() {
             </>
           ) : (
             <>
-              <button
-                onClick={() => setIsEmailLogin(false)}
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                ← Back to Google Sign in
-              </button>
+              {GOOGLE_ENABLED && (
+                <button
+                  onClick={() => setIsEmailLogin(false)}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  ← Back to Google Sign in
+                </button>
+              )}
 
               <form onSubmit={handleEmailSignIn} className="space-y-4">
                 <div>

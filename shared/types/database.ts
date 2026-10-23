@@ -112,24 +112,30 @@ export interface Database {
         Row: {
           id: string
           user_id: string
+          document_id: string
           title: string
           summary: string | null
+          summary_message_count: number
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           user_id: string
+          document_id: string
           title?: string
           summary?: string | null
+          summary_message_count?: number
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           user_id?: string
+          document_id?: string
           title?: string
           summary?: string | null
+          summary_message_count?: number
           created_at?: string
           updated_at?: string
         }
@@ -141,6 +147,7 @@ export interface Database {
           conversation_id: string
           role: 'user' | 'assistant' | 'system'
           content: string
+          metadata: Json
           created_at: string
         }
         Insert: {
@@ -148,6 +155,7 @@ export interface Database {
           conversation_id: string
           role: 'user' | 'assistant' | 'system'
           content: string
+          metadata?: Json
           created_at?: string
         }
         Update: {
@@ -155,6 +163,7 @@ export interface Database {
           conversation_id?: string
           role?: 'user' | 'assistant' | 'system'
           content?: string
+          metadata?: Json
           created_at?: string
         }
         Relationships: []
@@ -169,6 +178,8 @@ export interface Database {
           status: string | null
           current_period_start: string | null
           current_period_end: string | null
+          price_id: string | null
+          cancel_at_period_end: boolean
           created_at: string
           updated_at: string
         }
@@ -181,6 +192,8 @@ export interface Database {
           status?: string | null
           current_period_start?: string | null
           current_period_end?: string | null
+          price_id?: string | null
+          cancel_at_period_end?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -193,6 +206,8 @@ export interface Database {
           status?: string | null
           current_period_start?: string | null
           current_period_end?: string | null
+          price_id?: string | null
+          cancel_at_period_end?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -237,12 +252,81 @@ export interface Database {
         }
         Relationships: []
       }
+      stripe_events: {
+        Row: {
+          id: string
+          type: string
+          created_at: string
+        }
+        Insert: {
+          id: string
+          type: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          type?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      rate_limits: {
+        Row: {
+          key: string
+          window_start: string
+          count: number
+        }
+        Insert: {
+          key: string
+          window_start: string
+          count?: number
+        }
+        Update: {
+          key?: string
+          window_start?: string
+          count?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_document: {
+        Args: {
+          p_id: string
+          p_user_id: string
+          p_filename: string
+          p_storage_key: string
+          p_file_size: number
+          p_max_documents: number
+        }
+        Returns: boolean
+      }
+      record_usage: {
+        Args: {
+          p_user_id: string
+          p_questions?: number
+          p_documents?: number
+          p_embedding_tokens?: number
+          p_llm_tokens?: number
+          p_storage_bytes?: number
+        }
+        Returns: undefined
+      }
+      consume_question: {
+        Args: { p_user_id: string; p_limit: number }
+        Returns: boolean
+      }
+      hit_rate_limit: {
+        Args: { p_key: string; p_window_seconds: number; p_max: number }
+        Returns: boolean
+      }
+      current_usage_period: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       document_status: 'uploading' | 'processing' | 'embedding' | 'ready' | 'failed'

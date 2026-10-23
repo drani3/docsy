@@ -6,11 +6,11 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
 
-export const signInWithGoogle = async () => {
+export const signInWithGoogle = async (next = '/dashboard') => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
+      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
     },
   })
 

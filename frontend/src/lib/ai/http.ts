@@ -48,6 +48,58 @@ export async function fetchJson<T>(url: string, init: RequestInit, { timeoutMs, 
   throw lastError
 }
 
+// Like fetchJson, but returns the response once headers arrive so the body can
+// be streamed. Retries only happen before that point; `timeoutMs` covers
+// connecting only. `signal` aborts the request at any time (e.g. the user
+// pressed Stop).
+export async function fetchStream(
+  url: string,
+  init: RequestInit,
+  { timeoutMs, maxAttempts = 2, signal }: RetryOptions & { signal?: AbortSignal }
+): Promise<Response> {
+  let lastError: Error = new Error('Request failed')
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const controller = new AbortController()
+    const abort = () => controller.abort(signal?.reason)
+    if (signal?.aborted) throw signal.reason ?? new Error('Aborted')
+    signal?.addEventListener('abort', abort, { once: true })
+    let timedOut = false
+    const timer = setTimeout(() => {
+      timedOut = true
+      controller.abort()
+    }, timeoutMs)
+
+    try {
+      const response = await fetch(url, { ...init, signal: controller.signal })
+      clearTimeout(timer)
+
+      if (response.ok && response.body) {
+        // Keep forwarding aborts while the caller reads the body
+        return response
+      }
+      signal?.removeEventListener('abort', abort)
+
+      const text = await response.text()
+      lastError = new ApiError(`${response.status} ${extractMessage(text) || response.statusText}`, response.status)
+      if (!RETRYABLE_STATUS.has(response.status) || attempt === maxAttempts) throw lastError
+
+      const retryAfter = Number(response.headers.get('retry-after'))
+      await sleep(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : backoff(attempt))
+    } catch (error: any) {
+      clearTimeout(timer)
+      signal?.removeEventListener('abort', abort)
+      if (error instanceof ApiError) throw error
+      if (signal?.aborted) throw error
+      lastError = timedOut ? new Error(`Request timed out after ${timeoutMs}ms`) : error
+      if (attempt === maxAttempts) throw lastError
+      await sleep(backoff(attempt))
+    }
+  }
+
+  throw lastError
+}
+
 function backoff(attempt: number) {
   return Math.min(500 * 2 ** (attempt - 1), 8000) + Math.random() * 250
 }

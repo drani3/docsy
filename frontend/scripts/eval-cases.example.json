@@ -1,0 +1,10 @@
+{
+  "user_id": "00000000-0000-0000-0000-000000000000",
+  "document_id": "00000000-0000-0000-0000-000000000000",
+  "cases": [
+    { "question": "What is the main topic of the document?", "expected_pages": [1] },
+    { "question": "What figure is reported in the summary table?", "expected_pages": [2] },
+    { "question": "What does the conclusion recommend?", "expected_pages": [3] },
+    { "question": "Who won the 1998 football World Cup?", "expected_pages": [] }
+  ]
+}

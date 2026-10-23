@@ -5,13 +5,15 @@ import { embedTexts } from '@/lib/ai/openai'
 import { deleteStaleVectors, namespaceForUser, upsertVectors, vectorId } from '@/lib/vector/pinecone'
 import { extractPdfPages, IngestionError } from './pdf'
 import { chunkPages } from './chunk'
+import { recordTokens } from '@/lib/billing/entitlements'
+import { log } from '@/lib/log'
 import type { Database } from '@shared/types/database'
 
 type DocumentUpdate = Database['public']['Tables']['documents']['Update']
 
 const INSERT_BATCH_SIZE = 500
 // Chunks are embedded and upserted in groups so a 500-page PDF doesn't hold
-// thousands of 1536-dim vectors in memory at once
+// thousands of embedding vectors in memory at once
 const EMBED_GROUP_SIZE = 200
 
 // Runs the pipeline for one document:
@@ -44,9 +46,11 @@ export async function ingestDocument(documentId: string): Promise<{ status: 'rea
     await setStatus({ status: 'processing', error_message: null })
 
     // 1. Extract and chunk
+    const extractTimer = Date.now()
     const data = await downloadFile(document.storage_key)
     const pages = await extractPdfPages(data)
     const chunks = chunkPages(pages)
+    const extractMs = Date.now() - extractTimer
 
     // 2. Save chunks, then drop any leftovers from a previous run
     const chunkIds = new Map<number, string>()
@@ -76,6 +80,7 @@ export async function ingestDocument(documentId: string): Promise<{ status: 'rea
     // 3. Embed and index in Pinecone
     await setStatus({ status: 'embedding', page_count: pages.length })
 
+    const embedTimer = Date.now()
     const namespace = namespaceForUser(document.user_id)
     let embeddingTokens = 0
     for (let i = 0; i < chunks.length; i += EMBED_GROUP_SIZE) {
@@ -98,16 +103,23 @@ export async function ingestDocument(documentId: string): Promise<{ status: 'rea
       )
     }
     const staleVectors = await deleteStaleVectors(namespace, documentId, chunks.length)
+    const embedMs = Date.now() - embedTimer
 
     // 4. Done
     await setStatus({ status: 'ready', error_message: null })
 
-    console.info('[ingestion] ready', {
-      documentId,
+    await recordTokens(document.user_id, { embedding: embeddingTokens }).catch(error =>
+      log.error('usage.record_failed', { document_id: documentId, error })
+    )
+    log.info('ingestion.ready', {
+      document_id: documentId,
+      user_id: document.user_id,
       pages: pages.length,
       chunks: chunks.length,
-      embeddingTokens,
-      staleVectors,
+      embedding_tokens: embeddingTokens,
+      stale_vectors: staleVectors,
+      extract_ms: extractMs,
+      embed_ms: embedMs,
       ms: Date.now() - startedAt,
     })
     return { status: 'ready' }
@@ -116,14 +128,20 @@ export async function ingestDocument(documentId: string): Promise<{ status: 'rea
       error instanceof IngestionError ? error.message : 'Processing failed. Please try again.'
 
     // Log the real cause, never the document's contents
-    console.error('[ingestion] failed', { documentId, ms: Date.now() - startedAt, error: error?.message })
+    log.error('ingestion.failed', {
+      document_id: documentId,
+      user_id: document.user_id,
+      expected: error instanceof IngestionError,
+      ms: Date.now() - startedAt,
+      error: error?.message,
+    })
 
     const { error: failError } = await supabase
       .from('documents')
       .update({ status: 'failed', error_message: userMessage })
       .eq('id', documentId)
     if (failError) {
-      console.error('[ingestion] could not mark document failed', { documentId, error: failError.message })
+      log.error('ingestion.mark_failed_failed', { document_id: documentId, error: failError.message })
     }
 
     return { status: 'failed', error: userMessage }

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { deleteFile } from '@/lib/r2/upload'
 import { deleteDocumentVectors, isPineconeConfigured, namespaceForUser } from '@/lib/vector/pinecone'
+import { log } from '@/lib/log'
 import { NextResponse } from 'next/server'
 
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
@@ -29,20 +30,21 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
     if (isPineconeConfigured()) {
       await deleteDocumentVectors(namespaceForUser(user.id), document.id)
     } else {
-      console.warn('Pinecone is not configured; skipping vector deletion for', document.id)
+      log.warn('document.delete.pinecone_not_configured', { document_id: document.id })
     }
     await deleteFile(document.storage_key)
 
     const { error } = await supabase.from('documents').delete().eq('id', document.id)
 
     if (error) {
-      console.error('Error deleting document:', error)
+      log.error('document.delete_failed', { document_id: document.id, error: error.message })
       return NextResponse.json({ error: 'Failed to delete document' }, { status: 500 })
     }
 
+    log.info('document.deleted', { user_id: user.id, document_id: document.id })
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting document:', error)
+    log.error('document.delete_failed', { document_id: params.id, error })
     return NextResponse.json({ error: 'Failed to delete document' }, { status: 500 })
   }
 }

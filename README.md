@@ -50,7 +50,7 @@ npm install
 ```bash
 cp frontend/.env.local.example frontend/.env.local
 ```
-Edit `frontend/.env.local` with your Supabase credentials.
+Fill in `frontend/.env.local` (each variable is described in the example file).
 
 3. Start development:
 ```bash
@@ -61,26 +61,26 @@ This will start:
 - Frontend: http://localhost:3000
 - Supabase functions: http://localhost:54321
 
+## Scripts
+
+Run from `frontend/` (or add `--workspace=frontend` from the root):
+
+| Command | What it does |
+|---|---|
+| `npm run dev` | Development server on http://localhost:3000 |
+| `npm test` | Unit tests (Vitest): chunking, PDF parsing, citations, prompts, plans, Stripe webhook |
+| `npm run typecheck` | TypeScript check |
+| `npm run eval:retrieval -- <cases.json>` | Retrieval quality report for one document (see `scripts/eval-cases.example.json`) |
+
+## Database
+
+Apply `backend/supabase/migrations/*.sql` in order (001, 002, 003).
+
+## Deployment
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for setting up Supabase, Google sign-in, R2, Pinecone,
+OpenAI, Stripe and Vercel, plus monitoring and the end-to-end checklist.
+
 ## Development Phases
 
-See TODO.txt for detailed implementation phases:
-1. Project setup ✓
-2. Database
-3. Authentication
-4. UI foundation
-5. R2 storage
-6. PDF upload
-7. PDF ingestion
-8. Pinecone
-9. Basic RAG
-10. Citations
-11. Conversation history
-12. Chat UI
-13. Stripe
-14. Stripe webhooks
-15. Usage limits
-16. Security
-17. RAG quality
-18. Testing
-19. Observability
-20. Production deployment
+See [TODO.md](TODO.md) for the implementation phases and their status.

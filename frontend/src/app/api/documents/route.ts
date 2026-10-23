@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { log } from '@/lib/log'
 import { NextResponse } from 'next/server'
 
 // Per-user data read from the session cookie; never pre-render at build time
@@ -20,13 +21,13 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching documents:', error)
+      log.error('documents.list_failed', { error: error.message })
       return NextResponse.json({ error: 'Failed to fetch documents' }, { status: 500 })
     }
 
     return NextResponse.json(documents)
   } catch (error) {
-    console.error('Error fetching documents:', error)
+    log.error('documents.list_failed', { error })
     return NextResponse.json({ error: 'Failed to fetch documents' }, { status: 500 })
   }
 }

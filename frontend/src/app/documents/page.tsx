@@ -7,7 +7,9 @@ import Empty from '@/components/ui/Empty'
 import ErrorState from '@/components/ui/Error'
 import Loading from '@/components/ui/Loading'
 import { showToast } from '@/components/ui/Toast'
-import { formatFileSize, validateUpload } from '@/lib/uploads'
+import { MAX_FILE_SIZE, formatFileSize, validateUpload } from '@/lib/uploads'
+import { apiFetch, readApiError } from '@/lib/api-client'
+import type { AccountSummary } from '@/lib/billing/plans'
 
 interface DocumentRow {
   id: string
@@ -34,8 +36,7 @@ const POLL_INTERVAL_MS = 3000
 const STUCK_AFTER_MS = 2 * 60 * 1000
 
 async function readError(response: Response, fallback: string) {
-  const body = await response.json().catch(() => null)
-  return body?.error || fallback
+  return (await readApiError(response, fallback)).message
 }
 
 // fetch() can't report upload progress, so the R2 PUT uses XHR
@@ -66,6 +67,12 @@ export default function DocumentsPage() {
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
   const [dragging, setDragging] = useState(false)
   const [busyIds, setBusyIds] = useState<Set<string>>(new Set())
+  const [account, setAccount] = useState<AccountSummary | null>(null)
+  // Shown when the last upload hit a plan limit
+  const [limitMessage, setLimitMessage] = useState<string | null>(null)
+
+  const maxFileSize = account?.limits.maxFileSize ?? MAX_FILE_SIZE
+  const atDocumentLimit = account ? account.usage.documents >= account.limits.documents : false
 
   const uploading = uploadProgress !== null
 
@@ -79,11 +86,12 @@ export default function DocumentsPage() {
 
   const loadDocuments = useCallback(async () => {
     try {
-      const response = await fetch('/api/documents')
+      const [response, accountResponse] = await Promise.all([apiFetch('/api/documents'), apiFetch('/api/billing/account')])
       if (!response.ok) {
         throw new Error(await readError(response, 'Failed to load documents'))
       }
       setDocuments(await response.json())
+      if (accountResponse.ok) setAccount(await accountResponse.json())
       setLoadError(null)
     } catch (error: any) {
       setLoadError(error.message || 'Failed to load documents')
@@ -112,7 +120,7 @@ export default function DocumentsPage() {
         setDocuments(docs => docs.map(d => (d.id === id ? { ...d, status: 'processing', updated_at: new Date().toISOString() } : d)))
       }
       try {
-        const response = await fetch(`/api/documents/${id}/process${force ? '?force=1' : ''}`, { method: 'POST' })
+        const response = await apiFetch(`/api/documents/${id}/process${force ? '?force=1' : ''}`, { method: 'POST' })
         if (!response.ok) {
           throw new Error(await readError(response, 'Failed to process document'))
         }
@@ -134,7 +142,7 @@ export default function DocumentsPage() {
 
   const selectFile = (selectedFile: File | undefined) => {
     if (!selectedFile || uploading) return
-    const validationError = validateUpload(selectedFile)
+    const validationError = validateUpload(selectedFile, maxFileSize)
     if (validationError) {
       showToast('error', validationError)
       return
@@ -160,17 +168,20 @@ export default function DocumentsPage() {
     if (!file) return
 
     setUploadProgress(0)
+    setLimitMessage(null)
     let documentId: string | null = null
 
     try {
       // 1. Create the document record and get a presigned upload URL
-      const startResponse = await fetch('/api/upload', {
+      const startResponse = await apiFetch('/api/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fileName: file.name, fileSize: file.size, mimeType: file.type }),
       })
       if (!startResponse.ok) {
-        throw new Error(await readError(startResponse, 'Failed to start upload'))
+        const { message, upgrade } = await readApiError(startResponse, 'Failed to start upload')
+        if (startResponse.status === 403) setLimitMessage(upgrade ? `${message} Upgrade to Pro for more.` : message)
+        throw new Error(message)
       }
       const { documentId: id, uploadUrl } = await startResponse.json()
       documentId = id
@@ -179,7 +190,7 @@ export default function DocumentsPage() {
       await putWithProgress(uploadUrl, file, setUploadProgress)
 
       // 3. Tell the server the upload finished
-      const completeResponse = await fetch(`/api/documents/${id}/complete`, { method: 'POST' })
+      const completeResponse = await apiFetch(`/api/documents/${id}/complete`, { method: 'POST' })
       if (!completeResponse.ok) {
         throw new Error(await readError(completeResponse, 'Failed to complete upload'))
       }
@@ -197,7 +208,7 @@ export default function DocumentsPage() {
       showToast('error', error.message || 'Failed to upload document')
       // Clean up the half-created record so it doesn't sit in "uploading" forever
       if (documentId) {
-        await fetch(`/api/documents/${documentId}`, { method: 'DELETE' }).catch(() => {})
+        await apiFetch(`/api/documents/${documentId}`, { method: 'DELETE' }).catch(() => {})
       }
       setUploadProgress(null)
       loadDocuments()
@@ -207,7 +218,7 @@ export default function DocumentsPage() {
   const handleDownload = async (doc: DocumentRow) => {
     setBusy(doc.id, true)
     try {
-      const response = await fetch(`/api/documents/${doc.id}/download`)
+      const response = await apiFetch(`/api/documents/${doc.id}/download`)
       if (!response.ok) {
         throw new Error(await readError(response, 'Failed to download document'))
       }
@@ -225,11 +236,13 @@ export default function DocumentsPage() {
 
     setBusy(doc.id, true)
     try {
-      const response = await fetch(`/api/documents/${doc.id}`, { method: 'DELETE' })
+      const response = await apiFetch(`/api/documents/${doc.id}`, { method: 'DELETE' })
       if (!response.ok) {
         throw new Error(await readError(response, 'Failed to delete document'))
       }
       setDocuments(docs => docs.filter(d => d.id !== doc.id))
+      setAccount(a => (a ? { ...a, usage: { ...a.usage, documents: Math.max(a.usage.documents - 1, 0) } } : a))
+      setLimitMessage(null)
       showToast('success', 'Document deleted')
     } catch (error: any) {
       showToast('error', error.message || 'Failed to delete document')
@@ -274,8 +287,22 @@ export default function DocumentsPage() {
             <p className="text-sm text-gray-600 mb-2">
               {file ? `${file.name} (${formatFileSize(file.size)})` : 'Drag and drop a PDF here, or click to choose'}
             </p>
-            <p className="text-xs text-gray-500">PDF files up to 10MB</p>
+            <p className="text-xs text-gray-500">
+              PDF files up to {formatFileSize(maxFileSize)}
+              {account && ` · ${account.usage.documents} of ${account.limits.documents} documents used`}
+            </p>
           </label>
+
+          {(limitMessage || (atDocumentLimit && !file)) && (
+            <p className="mt-4 text-sm text-amber-800">
+              {limitMessage ?? `You've reached your plan's limit of ${account?.limits.documents} documents. Delete one to upload another.`}{' '}
+              {account?.plan === 'free' && (
+                <Link href="/settings" className="font-medium text-indigo-600 hover:text-indigo-800">
+                  Upgrade to Pro
+                </Link>
+              )}
+            </p>
+          )}
 
           {uploading ? (
             <div className="mt-4 max-w-sm mx-auto">

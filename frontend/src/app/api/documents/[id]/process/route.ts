@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { ingestDocument } from '@/lib/ingestion'
+import { rateLimit } from '@/lib/rate-limit'
+import { log } from '@/lib/log'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -17,6 +19,10 @@ export async function POST(request: Request, { params }: { params: { id: string 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    // Each run re-embeds the whole document, which costs OpenAI tokens
+    const limited = await rateLimit('process', user.id)
+    if (limited) return limited
 
     const { data: document } = await supabase
       .from('documents')
@@ -42,7 +48,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
     return NextResponse.json({ id: document.id, ...result })
   } catch (error) {
-    console.error('Error processing document:', error)
+    log.error('ingestion.request_failed', { document_id: params.id, error })
     return NextResponse.json({ error: 'Failed to process document' }, { status: 500 })
   }
 }
